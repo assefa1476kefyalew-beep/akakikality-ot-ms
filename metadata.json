@@ -1,0 +1,6 @@
+{
+  "name": "Akaki Kality Overtime Attendance System",
+  "description": "Comprehensive overtime attendance and shift management system for Akaki Kality Industrial Company. Features attendance tracking, overtime multiplier rules, shift schedules, manager approvals, badge logs, and payroll reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
