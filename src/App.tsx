@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { auth } from './lib/firebase';
-import { Crown, X, ShieldCheck, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Crown, X, ShieldCheck, ArrowRight, Sparkles, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { useLanguage } from './context/LanguageContext';
 import {
   Employee,
@@ -127,7 +127,14 @@ export default function App() {
     targetElement?: string
   ) => {
     const userEmail = currentUser?.email || 'portal.user@akakimesob.com';
-    const isAdmin = currentUser?.uid === '9Cjupb7U1mMU8104mBDLqUugMar1' || userEmail.includes('admin');
+    const isAdmin =
+      currentUser?.uid === '9Cjupb7U1mMU8104mBDLqUugMar1' ||
+      userEmail.toLowerCase().includes('admin') ||
+      userEmail.toLowerCase().includes('assefa');
+
+    // DO NOT record activity if the user is a System Administrator
+    if (isAdmin) return;
+
     const now = new Date();
     const displayTimeStr =
       now.toLocaleDateString('en-US', {
@@ -148,8 +155,8 @@ export default function App() {
     const newLog: UserAccessLog = {
       id: `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       email: userEmail,
-      fullName: currentUser?.displayName || (isAdmin ? 'Assefa Kefyalew (System Admin)' : 'Plant Operations User'),
-      role: isAdmin ? 'System Administrator (Admin)' : 'Plant Operations Supervisor',
+      fullName: currentUser?.displayName || 'Plant Operations User',
+      role: 'Plant Operations Supervisor',
       accessTime: now.toISOString(),
       displayTime: displayTimeStr,
       loginMethod: 'UI Action Listener',
@@ -157,7 +164,7 @@ export default function App() {
       location: 'Addis Ababa, Ethiopia',
       userAgent: window.navigator.userAgent || 'Mozilla/5.0 (Client Terminal)',
       status: 'Activity Executed',
-      badgeNumber: isAdmin ? 'SYS-ADMIN-01' : 'AKC-SUP-101',
+      badgeNumber: 'AKC-SUP-101',
       category,
       actionTitle,
       actionDetails,
@@ -171,8 +178,14 @@ export default function App() {
   useEffect(() => {
     if (currentUser && currentUser.email) {
       const userEmail = currentUser.email;
-      const isAdmin = currentUser.uid === '9Cjupb7U1mMU8104mBDLqUugMar1' || userEmail.includes('admin');
-      
+      const isAdmin =
+        currentUser.uid === '9Cjupb7U1mMU8104mBDLqUugMar1' ||
+        userEmail.toLowerCase().includes('admin') ||
+        userEmail.toLowerCase().includes('assefa');
+
+      // DO NOT record session log if the user is a System Administrator
+      if (isAdmin) return;
+
       setUserAccessLogs((prev) => {
         // Check if user already has an active session
         const existingActive = prev.find((l) => l.email === userEmail && l.status === 'Active Session');
@@ -194,8 +207,8 @@ export default function App() {
         const newLog: UserAccessLog = {
           id: `LOG-${Date.now()}`,
           email: userEmail,
-          fullName: currentUser.displayName || (isAdmin ? 'Assefa Kefyalew (System Admin)' : 'Plant Operations User'),
-          role: isAdmin ? 'System Administrator (Admin)' : 'Plant Operations Supervisor',
+          fullName: currentUser.displayName || 'Plant Operations User',
+          role: 'Plant Operations Supervisor',
           accessTime: now.toISOString(),
           displayTime: displayTimeStr,
           loginMethod: 'Firebase Auth',
@@ -203,7 +216,7 @@ export default function App() {
           location: 'Addis Ababa, Ethiopia',
           userAgent: window.navigator.userAgent || 'Mozilla/5.0 (Client Terminal)',
           status: 'Active Session',
-          badgeNumber: isAdmin ? 'SYS-ADMIN-01' : 'AKC-SUP-101',
+          badgeNumber: 'AKC-SUP-101',
           category: 'Authentication',
           actionTitle: 'Signed In & Active Session Started',
           actionDetails: 'Authenticated via Firebase Auth service',
@@ -263,7 +276,16 @@ export default function App() {
   }, [currentUser]);
 
   // Tab Switcher with Audit Logging
+  const currentEmailLower = currentUser?.email?.toLowerCase() || '';
+  const isSystemAdmin =
+    currentUser?.uid === '9Cjupb7U1mMU8104mBDLqUugMar1' ||
+    currentEmailLower.includes('admin') ||
+    currentEmailLower.includes('assefa');
+
   const handleSelectTab = (tab: string) => {
+    if (tab === 'access_logs' && !isSystemAdmin) {
+      return;
+    }
     setActiveTab(tab);
     const tabNames: Record<string, string> = {
       dashboard: 'Plant Dashboard Overview',
@@ -599,12 +621,28 @@ export default function App() {
         )}
 
         {activeTab === 'access_logs' && (
-          <UserAccessLogs
-            logs={userAccessLogs}
-            onAddLog={handleAddAccessLog}
-            onClearLogs={handleClearAccessLogs}
-            onTerminateSession={handleTerminateSession}
-          />
+          isSystemAdmin ? (
+            <UserAccessLogs
+              logs={userAccessLogs}
+              onAddLog={handleAddAccessLog}
+              onClearLogs={handleClearAccessLogs}
+              onTerminateSession={handleTerminateSession}
+            />
+          ) : (
+            <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl p-8 text-center space-y-3">
+              <ShieldAlert className="w-12 h-12 text-red-500 mx-auto" />
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Access Restricted</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto">
+                Portal Access & Activity Audit logs are restricted to System Administrators only.
+              </p>
+              <button
+                onClick={() => handleSelectTab('dashboard')}
+                className="px-4 py-2 bg-amber-500 text-slate-950 font-extrabold text-xs rounded-xl hover:bg-amber-400 transition-colors cursor-pointer"
+              >
+                Return to Dashboard
+              </button>
+            </div>
+          )
         )}
       </main>
 

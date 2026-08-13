@@ -73,6 +73,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const { t } = useLanguage();
 
+  const currentUser = auth.currentUser;
+  const ADMIN_UID = '9Cjupb7U1mMU8104mBDLqUugMar1';
+  const userEmail = currentUser?.email?.toLowerCase() || '';
+  const isAdmin = currentUser?.uid === ADMIN_UID || userEmail.includes('admin') || userEmail.includes('assefa');
+
   const navItems = [
     { id: 'dashboard', label: t('nav_dashboard'), icon: Factory },
     { id: 'clocking', label: t('nav_clocking'), icon: Clock },
@@ -81,19 +86,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'roster', label: t('nav_roster'), icon: Users, alertBadge: exceededLimitCount },
     { id: 'scheduler', label: t('nav_scheduler'), icon: CalendarDays },
     { id: 'policy', label: t('nav_policy'), icon: Settings },
-    { id: 'access_logs', label: t('nav_access_logs'), icon: Shield },
+    ...(isAdmin ? [{ id: 'access_logs', label: t('nav_access_logs'), icon: Shield }] : []),
   ];
 
   const filteredNavItems = navItems.filter((item) =>
     item.label.toLowerCase().includes(navSearch.toLowerCase())
   );
 
-  const currentUser = auth.currentUser;
-  const ADMIN_UID = '9Cjupb7U1mMU8104mBDLqUugMar1';
-  const isAdmin = currentUser?.uid === ADMIN_UID || currentUser?.email?.includes('admin');
-
   const userName = currentUser?.displayName || (isAdmin ? 'System Administrator' : currentUser?.email?.split('@')[0] || 'Plant Operator');
-  const userEmail = currentUser?.email || 'authenticated@akakikality.gov.et';
+  const userEmailDisplay = currentUser?.email || 'authenticated@akakikality.gov.et';
 
   return (
     <>

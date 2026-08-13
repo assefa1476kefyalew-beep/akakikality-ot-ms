@@ -9,9 +9,9 @@ export interface LanguageContextType {
 }
 
 export const languageNames: Record<Language, { name: string; flag: string; label: string }> = {
-  en: { name: 'English', flag: '🇬🇧', label: 'English' },
-  am: { name: 'አማርኛ', flag: '🇪🇹', label: 'Amharic (አማርኛ)' },
-  om: { name: 'Afaan Oromoo', flag: '🇪🇹', label: 'Oromiffa (Afaan Oromoo)' },
+  en: { name: 'English', flag: '', label: 'English' },
+  am: { name: 'አማርኛ', flag: '', label: 'Amharic (አማርኛ)' },
+  om: { name: 'Afaan Oromoo', flag: '', label: 'Oromiffa (Afaan Oromoo)' },
 };
 
 const translations: Record<Language, Record<string, string>> = {

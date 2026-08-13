@@ -85,10 +85,21 @@ export const savePolicy = (policy: OvertimeRatePolicy): void => {
 export const loadAccessLogs = (): UserAccessLog[] => {
   try {
     const data = localStorage.getItem(KEYS.ACCESS_LOGS);
-    return data ? JSON.parse(data) : INITIAL_ACCESS_LOGS;
+    const logs: UserAccessLog[] = data ? JSON.parse(data) : INITIAL_ACCESS_LOGS;
+    return logs.filter(
+      (l) =>
+        !l.role.includes('Admin') &&
+        !l.email.toLowerCase().includes('admin') &&
+        !l.email.toLowerCase().includes('assefa')
+    );
   } catch (err) {
     console.error('Failed loading access logs', err);
-    return INITIAL_ACCESS_LOGS;
+    return INITIAL_ACCESS_LOGS.filter(
+      (l) =>
+        !l.role.includes('Admin') &&
+        !l.email.toLowerCase().includes('admin') &&
+        !l.email.toLowerCase().includes('assefa')
+    );
   }
 };
 

@@ -306,42 +306,6 @@ export const INITIAL_REQUESTS: OvertimeRequest[] = [
 export const INITIAL_ACCESS_LOGS = [
   {
     id: 'LOG-20260813-001',
-    email: 'assefa1476kefyalew@gmail.com',
-    fullName: 'Assefa Kefyalew (System Admin)',
-    role: 'System Administrator (Admin)' as const,
-    accessTime: '2026-08-13T06:47:49.000Z',
-    displayTime: 'Aug 13, 2026 • 06:47:49 EAT',
-    loginMethod: 'Firebase Auth' as const,
-    ipAddress: '197.156.121.84',
-    location: 'Addis Ababa, Ethiopia',
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-    status: 'Active Session' as const,
-    badgeNumber: 'SYS-ADMIN-01',
-    category: 'Authentication' as const,
-    actionTitle: 'Signed In & Session Authenticated',
-    actionDetails: 'Authenticated via Firebase Google OAuth credentials',
-    targetElement: 'AuthPage / Firebase Token Client'
-  },
-  {
-    id: 'LOG-20260813-002',
-    email: 'assefa1476kefyalew@gmail.com',
-    fullName: 'Assefa Kefyalew (System Admin)',
-    role: 'System Administrator (Admin)' as const,
-    accessTime: '2026-08-13T06:48:15.000Z',
-    displayTime: 'Aug 13, 2026 • 06:48:15 EAT',
-    loginMethod: 'UI Action Listener' as const,
-    ipAddress: '197.156.121.84',
-    location: 'Addis Ababa, Ethiopia',
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-    status: 'Activity Executed' as const,
-    badgeNumber: 'SYS-ADMIN-01',
-    category: 'Navigation' as const,
-    actionTitle: 'Opened Overtime Approvals Tab',
-    actionDetails: 'User clicked Navigation item "nav_requests"',
-    targetElement: 'Sidebar Item [Overtime Approvals]'
-  },
-  {
-    id: 'LOG-20260813-003',
     email: 'martha.girma@akakimesob.com',
     fullName: 'Martha Girma',
     role: 'HR & Timekeeping Manager' as const,
@@ -359,7 +323,7 @@ export const INITIAL_ACCESS_LOGS = [
     targetElement: 'Button [Approve Request]'
   },
   {
-    id: 'LOG-20260813-004',
+    id: 'LOG-20260813-002',
     email: 'solomon.worku@akakimesob.com',
     fullName: 'Eng. Solomon Worku',
     role: 'Plant Operations Supervisor' as const,
@@ -377,22 +341,22 @@ export const INITIAL_ACCESS_LOGS = [
     targetElement: 'ClockingStation [Confirm Clock In]'
   },
   {
-    id: 'LOG-20260812-005',
-    email: 'admin@akakimesob.com',
-    fullName: 'Worku Kassaye',
-    role: 'System Administrator (Admin)' as const,
-    accessTime: '2026-08-12T16:45:00.000Z',
-    displayTime: 'Aug 12, 2026 • 16:45:00 EAT',
+    id: 'LOG-20260812-003',
+    email: 'firew.plantmgr@akakimesob.com',
+    fullName: 'Firew Haile',
+    role: 'Plant Operations Supervisor' as const,
+    accessTime: '2026-08-12T14:10:33.000Z',
+    displayTime: 'Aug 12, 2026 • 14:10:33 EAT',
     loginMethod: 'Email & Password' as const,
-    ipAddress: '197.156.121.10',
-    location: 'Akaki Kality Sub-City, Addis Ababa',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    status: 'Activity Executed' as const,
-    badgeNumber: 'AKC-ADMIN-02',
-    category: 'System & Export' as const,
-    actionTitle: 'Exported Monthly Payroll CSV',
-    actionDetails: 'Generated printable official payroll report (18 employees, 184 OT hours)',
-    targetElement: 'PayrollExportModal [Download CSV]'
+    ipAddress: '197.156.121.99',
+    location: 'Akaki Kality Industrial Zone',
+    userAgent: 'Firefox 128.0 / Linux',
+    status: 'Logged Out' as const,
+    badgeNumber: 'AKC-MGR-002',
+    category: 'Authentication' as const,
+    actionTitle: 'Signed Out & Ended Session',
+    actionDetails: 'User logged off shift management terminal',
+    targetElement: 'TopHeader [Logout]'
   }
 ];
 

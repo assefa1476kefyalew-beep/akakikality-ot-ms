@@ -89,8 +89,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             title={t('select_language')}
           >
             <Globe className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-            <span className="font-bold">{languageNames[language].flag}</span>
-            <span className="hidden md:inline font-bold">{languageNames[language].label}</span>
+            <span className="font-bold">{languageNames[language].label}</span>
             <ChevronDown className="w-3 h-3 text-slate-500 dark:text-slate-400" />
           </button>
 
@@ -111,7 +110,6 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                   }`}
                 >
                   <span className="flex items-center space-x-2">
-                    <span className="text-sm">{languageNames[langKey].flag}</span>
                     <span>{languageNames[langKey].label}</span>
                   </span>
                   {language === langKey && <CheckCircle2 className="w-4 h-4 text-slate-950" />}
