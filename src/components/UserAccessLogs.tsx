@@ -39,6 +39,7 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
   onTerminateSession,
 }) => {
   const { t } = useLanguage();
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -51,6 +52,9 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
     fullName: 'Tesfaye Alemu',
     role: 'Plant Operations Supervisor' as UserAccessLog['role'],
     loginMethod: 'Email & Password' as UserAccessLog['loginMethod'],
+    category: 'Clocking Action' as UserAccessLog['category'],
+    actionTitle: 'Clocked IN Worker AKC-1002',
+    actionDetails: 'Scanned worker badge at Plant Gate Terminal 1',
     ipAddress: '197.156.121.112',
     location: 'Akaki Kality Industrial Zone, Addis Ababa',
     badgeNumber: 'AKC-SUP-202',
@@ -70,6 +74,9 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
       log.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.ipAddress.includes(searchTerm) ||
       log.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (log.actionTitle && log.actionTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (log.actionDetails && log.actionDetails.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (log.targetElement && log.targetElement.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (log.badgeNumber && log.badgeNumber.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesRole =
@@ -83,9 +90,13 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
       statusFilter === 'ALL' ||
       (statusFilter === 'ACTIVE' && log.status === 'Active Session') ||
       (statusFilter === 'LOGGED_IN' && log.status === 'Logged In') ||
-      (statusFilter === 'LOGGED_OUT' && log.status === 'Logged Out');
+      (statusFilter === 'LOGGED_OUT' && log.status === 'Logged Out') ||
+      (statusFilter === 'ACTIVITY' && log.status === 'Activity Executed');
 
-    return matchesSearch && matchesRole && matchesStatus;
+    const matchesCategory =
+      categoryFilter === 'ALL' || log.category === categoryFilter;
+
+    return matchesSearch && matchesRole && matchesStatus && matchesCategory;
   });
 
   // Export logs to CSV
@@ -96,8 +107,12 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
       'Email',
       'Badge Number',
       'Role',
+      'Category',
+      'Action Title',
+      'Action Details',
+      'Target Element',
       'Access Time (EAT)',
-      'Login Method',
+      'Method/Provider',
       'IP Address',
       'Location',
       'Status',
@@ -110,6 +125,10 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
       l.email,
       l.badgeNumber || 'N/A',
       `"${l.role}"`,
+      `"${l.category || 'Authentication'}"`,
+      `"${l.actionTitle || 'User Access Event'}"`,
+      `"${(l.actionDetails || '').replace(/"/g, '""')}"`,
+      `"${(l.targetElement || '').replace(/"/g, '""')}"`,
       `"${l.displayTime}"`,
       l.loginMethod,
       l.ipAddress,
@@ -125,7 +144,7 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Akaki_Kality_Portal_Access_Audit_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `Akaki_Kality_Portal_Activity_Audit_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -156,12 +175,17 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
       ipAddress: simForm.ipAddress,
       location: simForm.location,
       userAgent: window.navigator.userAgent || 'Mozilla/5.0 (Client Terminal)',
-      status: 'Active Session',
+      status: 'Activity Executed',
       badgeNumber: simForm.badgeNumber,
+      category: simForm.category,
+      actionTitle: simForm.actionTitle,
+      actionDetails: simForm.actionDetails,
+      targetElement: 'Simulated Manual Event',
     });
 
     setIsSimulateModalOpen(false);
   };
+
 
   const getDeviceIcon = (ua: string) => {
     if (ua.toLowerCase().includes('android') || ua.toLowerCase().includes('iphone')) {
@@ -280,30 +304,45 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
 
       {/* Filter and Search Control Toolbar */}
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
           {/* Search Box */}
-          <div className="relative w-full sm:w-80">
+          <div className="relative w-full lg:w-96">
             <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search user, email, IP, or location..."
+              placeholder="Search user, action title, details, IP, target..."
               className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500 outline-none"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Role and Status Filters */}
-          <div className="flex items-center flex-wrap gap-2 w-full sm:w-auto">
-            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+          {/* Role and Category Filters */}
+          <div className="flex items-center flex-wrap gap-2 w-full lg:w-auto">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="px-3 py-2 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold outline-none cursor-pointer"
+            >
+              <option value="ALL">All Activity Categories</option>
+              <option value="Authentication">Authentication</option>
+              <option value="Navigation">Navigation</option>
+              <option value="Clocking Action">Clocking Action</option>
+              <option value="Overtime Approval">Overtime Approval</option>
+              <option value="Policy Update">Policy Update</option>
+              <option value="System & Export">System & Export</option>
+              <option value="User Interaction">User Interaction</option>
+            </select>
+
+            <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
               <Filter className="w-3.5 h-3.5 text-slate-400 ml-1.5" />
               <button
                 onClick={() => setRoleFilter('ALL')}
@@ -354,6 +393,7 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
             >
               <option value="ALL">All Statuses</option>
               <option value="ACTIVE">Active Session</option>
+              <option value="ACTIVITY">Activity Executed</option>
               <option value="LOGGED_IN">Logged In</option>
               <option value="LOGGED_OUT">Logged Out</option>
             </select>
@@ -364,15 +404,14 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
       {/* Access Log Table */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[950px]">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <th className="py-3.5 px-4">{t('col_user_email')}</th>
-                <th className="py-3.5 px-4">Role & Badge</th>
+                <th className="py-3.5 px-4">Category & Role</th>
+                <th className="py-3.5 px-4">User Activity / Click Event</th>
                 <th className="py-3.5 px-4">{t('col_access_time')}</th>
-                <th className="py-3.5 px-4">{t('col_login_method')}</th>
                 <th className="py-3.5 px-4">{t('col_ip_location')}</th>
-                <th className="py-3.5 px-4">{t('col_device_info')}</th>
                 <th className="py-3.5 px-4">{t('col_session_status')}</th>
                 <th className="py-3.5 px-4 text-right">{t('actions')}</th>
               </tr>
@@ -380,16 +419,29 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
               {filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400 dark:text-slate-500">
+                  <td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-500">
                     <Shield className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
-                    <p className="font-bold">No login access logs matched your query</p>
-                    <span className="text-[11px]">Try adjusting your search terms or filters above.</span>
+                    <p className="font-bold">No portal activity logs matched your filter query</p>
+                    <span className="text-[11px]">Try searching for other actions or clear active filters.</span>
                   </td>
                 </tr>
               ) : (
                 filteredLogs.map((log) => {
                   const isAdminRole = log.role.includes('Admin');
                   const isActive = log.status === 'Active Session';
+                  const cat = log.category || 'Authentication';
+
+                  const getCatBadgeClass = (c: string) => {
+                    switch (c) {
+                      case 'Authentication': return 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800';
+                      case 'Navigation': return 'bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-300 border-blue-300 dark:border-blue-800';
+                      case 'Clocking Action': return 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800';
+                      case 'Overtime Approval': return 'bg-purple-100 dark:bg-purple-950/80 text-purple-900 dark:text-purple-300 border-purple-300 dark:border-purple-800';
+                      case 'Policy Update': return 'bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-300 border-rose-300 dark:border-rose-800';
+                      case 'System & Export': return 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-900 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800';
+                      default: return 'bg-cyan-100 dark:bg-cyan-950/80 text-cyan-900 dark:text-cyan-300 border-cyan-300 dark:border-cyan-800';
+                    }
+                  };
 
                   return (
                     <tr
@@ -424,23 +476,32 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
                         </div>
                       </td>
 
-                      {/* Role & Badge */}
+                      {/* Category & Role */}
                       <td className="py-3.5 px-4">
                         <div className="space-y-1">
-                          <span
-                            className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase border ${
-                              isAdminRole
-                                ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800'
-                                : log.role.includes('HR')
-                                ? 'bg-purple-100 dark:bg-purple-950/80 text-purple-900 dark:text-purple-300 border-purple-300 dark:border-purple-800'
-                                : 'bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-300 border-blue-300 dark:border-blue-800'
-                            }`}
-                          >
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border shadow-2xs ${getCatBadgeClass(cat)}`}>
+                            {cat}
+                          </span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">
                             {log.role}
                           </span>
-                          {log.badgeNumber && (
-                            <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 block">
-                              Badge: {log.badgeNumber}
+                        </div>
+                      </td>
+
+                      {/* Activity & Target Element */}
+                      <td className="py-3.5 px-4 max-w-xs">
+                        <div className="space-y-0.5">
+                          <p className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                            {log.actionTitle || 'User Action Executed'}
+                          </p>
+                          {log.actionDetails && (
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate" title={log.actionDetails}>
+                              {log.actionDetails}
+                            </p>
+                          )}
+                          {log.targetElement && (
+                            <span className="inline-block font-mono text-[10px] text-amber-700 dark:text-amber-400/90 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.2 rounded border border-amber-200/50 dark:border-amber-900/50 truncate max-w-[220px]">
+                              {log.targetElement}
                             </span>
                           )}
                         </div>
@@ -454,14 +515,6 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
                         </div>
                       </td>
 
-                      {/* Login Method */}
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 rounded-lg text-[11px] font-bold border border-slate-200 dark:border-slate-700">
-                          <ShieldCheck className="w-3 h-3 text-amber-500" />
-                          <span>{log.loginMethod}</span>
-                        </span>
-                      </td>
-
                       {/* IP & Location */}
                       <td className="py-3.5 px-4">
                         <div className="space-y-0.5">
@@ -470,17 +523,7 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
                           </span>
                           <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center space-x-1">
                             <Globe className="w-3 h-3 text-slate-400" />
-                            <span className="truncate max-w-[150px]">{log.location}</span>
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Device Info */}
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center space-x-1.5 text-[11px] text-slate-600 dark:text-slate-400">
-                          {getDeviceIcon(log.userAgent)}
-                          <span className="truncate max-w-[140px]" title={log.userAgent}>
-                            {log.userAgent.split(' ')[0]}
+                            <span className="truncate max-w-[130px]">{log.location}</span>
                           </span>
                         </div>
                       </td>
@@ -495,6 +538,11 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
                             </span>
                             <span>{t('status_active_ot')}</span>
                           </span>
+                        ) : log.status === 'Activity Executed' ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 bg-cyan-100 dark:bg-cyan-950/80 text-cyan-900 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 rounded-full font-extrabold text-[10px]">
+                            <Activity className="w-3 h-3 text-cyan-500" />
+                            <span>Action Logged</span>
+                          </span>
                         ) : log.status === 'Logged In' ? (
                           <span className="inline-flex items-center space-x-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-300 border border-blue-300 dark:border-blue-800 rounded-full font-bold text-[10px]">
                             <CheckCircle2 className="w-3 h-3 text-blue-500" />
@@ -506,6 +554,7 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
                           </span>
                         )}
                       </td>
+
 
                       {/* Action Buttons */}
                       <td className="py-3.5 px-4 text-right">
@@ -564,18 +613,23 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
             </div>
 
             <div className="bg-slate-950 text-emerald-400 p-4 rounded-2xl font-mono text-xs overflow-x-auto space-y-1.5 border border-slate-800 shadow-inner">
+              <p><span className="text-slate-500">"event_id"</span>: <span className="text-amber-300">"{selectedLog.id}"</span>,</p>
               <p><span className="text-slate-500">"user"</span>: <span className="text-amber-300">"{selectedLog.fullName}"</span>,</p>
               <p><span className="text-slate-500">"email"</span>: <span className="text-amber-300">"{selectedLog.email}"</span>,</p>
+              <p><span className="text-slate-500">"category"</span>: <span className="text-amber-300">"{selectedLog.category || 'Authentication'}"</span>,</p>
+              <p><span className="text-slate-500">"action_title"</span>: <span className="text-amber-300">"{selectedLog.actionTitle || 'User Login'}"</span>,</p>
+              <p><span className="text-slate-500">"action_details"</span>: <span className="text-amber-300">"{selectedLog.actionDetails || 'N/A'}"</span>,</p>
+              <p><span className="text-slate-500">"target_element"</span>: <span className="text-amber-300">"{selectedLog.targetElement || 'N/A'}"</span>,</p>
               <p><span className="text-slate-500">"badge"</span>: <span className="text-amber-300">"{selectedLog.badgeNumber || 'N/A'}"</span>,</p>
               <p><span className="text-slate-500">"role"</span>: <span className="text-amber-300">"{selectedLog.role}"</span>,</p>
               <p><span className="text-slate-500">"access_time"</span>: <span className="text-amber-300">"{selectedLog.accessTime}"</span>,</p>
               <p><span className="text-slate-500">"display_eat"</span>: <span className="text-amber-300">"{selectedLog.displayTime}"</span>,</p>
-              <p><span className="text-slate-500">"auth_provider"</span>: <span className="text-amber-300">"{selectedLog.loginMethod}"</span>,</p>
               <p><span className="text-slate-500">"ip_address"</span>: <span className="text-amber-300">"{selectedLog.ipAddress}"</span>,</p>
               <p><span className="text-slate-500">"location"</span>: <span className="text-amber-300">"{selectedLog.location}"</span>,</p>
               <p><span className="text-slate-500">"status"</span>: <span className="text-amber-300">"{selectedLog.status}"</span>,</p>
               <p><span className="text-slate-500">"user_agent"</span>: <span className="text-amber-300">"{selectedLog.userAgent}"</span></p>
             </div>
+
 
             <div className="flex items-center justify-end space-x-3 pt-2">
               {selectedLog.status === 'Active Session' && (

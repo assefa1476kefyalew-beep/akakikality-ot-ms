@@ -13,7 +13,10 @@ import {
   AttendanceRecord,
   OvertimeRequest,
   OvertimeRatePolicy,
+  UserAccessLog,
+  ActivityCategory,
 } from './types';
+
 import {
   loadEmployees,
   saveEmployees,
@@ -40,7 +43,6 @@ import { ShiftScheduler } from './components/ShiftScheduler';
 import { PolicyConfig } from './components/PolicyConfig';
 import { UserAccessLogs } from './components/UserAccessLogs';
 import { PayrollExportModal } from './components/PayrollExportModal';
-import { UserAccessLog } from './types';
 
 
 export default function App() {
@@ -78,8 +80,16 @@ export default function App() {
   }, [darkMode]);
 
   const handleToggleTheme = () => {
-    setDarkMode((prev) => !prev);
+    const nextMode = !darkMode;
+    setDarkMode(nextMode);
+    logActivity(
+      'User Interaction',
+      `Toggled Theme to ${nextMode ? 'Dark Mode' : 'Light Mode'}`,
+      `User changed portal appearance theme setting`,
+      'TopHeader [Theme Toggle]'
+    );
   };
+
 
   // Core Application Data State
   const [employees, setEmployees] = useState<Employee[]>(loadEmployees);
@@ -108,6 +118,54 @@ export default function App() {
   useEffect(() => {
     saveAccessLogs(userAccessLogs);
   }, [userAccessLogs]);
+
+  // Centralized Activity & User Action Logger
+  const logActivity = (
+    category: ActivityCategory,
+    actionTitle: string,
+    actionDetails?: string,
+    targetElement?: string
+  ) => {
+    const userEmail = currentUser?.email || 'portal.user@akakimesob.com';
+    const isAdmin = currentUser?.uid === '9Cjupb7U1mMU8104mBDLqUugMar1' || userEmail.includes('admin');
+    const now = new Date();
+    const displayTimeStr =
+      now.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }) +
+      ' • ' +
+      now.toLocaleTimeString('en-US', {
+        timeZone: 'Africa/Addis_Ababa',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }) +
+      ' EAT';
+
+    const newLog: UserAccessLog = {
+      id: `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      email: userEmail,
+      fullName: currentUser?.displayName || (isAdmin ? 'Assefa Kefyalew (System Admin)' : 'Plant Operations User'),
+      role: isAdmin ? 'System Administrator (Admin)' : 'Plant Operations Supervisor',
+      accessTime: now.toISOString(),
+      displayTime: displayTimeStr,
+      loginMethod: 'UI Action Listener',
+      ipAddress: '197.156.121.84',
+      location: 'Addis Ababa, Ethiopia',
+      userAgent: window.navigator.userAgent || 'Mozilla/5.0 (Client Terminal)',
+      status: 'Activity Executed',
+      badgeNumber: isAdmin ? 'SYS-ADMIN-01' : 'AKC-SUP-101',
+      category,
+      actionTitle,
+      actionDetails,
+      targetElement,
+    };
+
+    setUserAccessLogs((prev) => [newLog, ...prev]);
+  };
 
   // Record Session Access Log when user authenticates
   useEffect(() => {
@@ -146,12 +204,84 @@ export default function App() {
           userAgent: window.navigator.userAgent || 'Mozilla/5.0 (Client Terminal)',
           status: 'Active Session',
           badgeNumber: isAdmin ? 'SYS-ADMIN-01' : 'AKC-SUP-101',
+          category: 'Authentication',
+          actionTitle: 'Signed In & Active Session Started',
+          actionDetails: 'Authenticated via Firebase Auth service',
+          targetElement: 'AuthPage / Firebase Token Client',
         };
 
         return [newLog, ...prev];
       });
     }
   }, [currentUser]);
+
+  // Global Mouse Click Listener to Capture ANY User Click on the Portal
+  useEffect(() => {
+    let lastClickTimestamp = 0;
+
+    const handleGlobalClick = (e: MouseEvent) => {
+      const now = Date.now();
+      if (now - lastClickTimestamp < 350) return; // Debounce double clicks
+
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const interactive = target.closest(
+        'button, a, input, select, textarea, [role="button"], [data-action], .cursor-pointer'
+      ) as HTMLElement | null;
+
+      if (interactive) {
+        lastClickTimestamp = now;
+        const tagName = interactive.tagName.toLowerCase();
+        let label =
+          interactive.getAttribute('aria-label') ||
+          interactive.getAttribute('title') ||
+          interactive.getAttribute('placeholder') ||
+          interactive.innerText ||
+          interactive.id ||
+          tagName;
+
+        label = label.trim().replace(/\s+/g, ' ');
+        if (label.length > 50) label = label.slice(0, 47) + '...';
+
+        // Ignore pure container wrappers with no meaningful text
+        if (!label || label === 'div' || label === 'svg' || label === 'span') return;
+
+        const targetDesc = `<${tagName}> "${label}"`;
+
+        logActivity(
+          'User Interaction',
+          `Clicked Portal Element "${label}"`,
+          `User interacted with UI element (${tagName}) on active portal view`,
+          targetDesc
+        );
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick, true);
+    return () => document.removeEventListener('click', handleGlobalClick, true);
+  }, [currentUser]);
+
+  // Tab Switcher with Audit Logging
+  const handleSelectTab = (tab: string) => {
+    setActiveTab(tab);
+    const tabNames: Record<string, string> = {
+      dashboard: 'Plant Dashboard Overview',
+      clocking: 'Live Attendance Clocking Station',
+      requests: 'Overtime Approvals & Requests',
+      attendance: 'Attendance Logs & Registers',
+      roster: 'Employee Shift Roster',
+      scheduler: 'Weekly Shift Scheduler',
+      policy: 'Overtime Policy Configuration',
+      access_logs: 'Portal Access & Activity Audit',
+    };
+    logActivity(
+      'Navigation',
+      `Switched Tab to "${tabNames[tab] || tab}"`,
+      `User navigated to screen section '${tab}'`,
+      `Sidebar / Nav Item [${tab}]`
+    );
+  };
 
   // Handler: Access Log Management
   const handleAddAccessLog = (newLog: Omit<UserAccessLog, 'id'>) => {
@@ -164,38 +294,69 @@ export default function App() {
 
   const handleClearAccessLogs = () => {
     setUserAccessLogs([]);
+    logActivity('System & Export', 'Cleared Portal Access & Activity Logs', 'Administrator cleared active log list', 'UserAccessLogs [Clear Logs]');
   };
 
   const handleTerminateSession = (logId: string) => {
     setUserAccessLogs((prev) =>
       prev.map((l) => (l.id === logId ? { ...l, status: 'Logged Out' } : l))
     );
+    logActivity('Authentication', `Terminated Active Session ${logId}`, 'Administrator forced session logoff', 'UserAccessLogs [Terminate Session]');
   };
-
 
   // Handler: Add Attendance
   const handleAddAttendance = (record: AttendanceRecord) => {
     setAttendanceRecords((prev) => [record, ...prev]);
+    logActivity(
+      'Clocking Action',
+      `Clocked ${record.status} for ${record.employeeName}`,
+      `Badge: ${record.badgeNumber}, Dept: ${record.department}, Check-In: ${record.checkInTime}`,
+      `ClockingStation [Confirm Clock In]`
+    );
   };
 
   // Handler: Update Attendance
   const handleUpdateAttendance = (record: AttendanceRecord) => {
     setAttendanceRecords((prev) => prev.map((r) => (r.id === record.id ? record : r)));
+    logActivity(
+      'Clocking Action',
+      `Updated Shift Check-Out for ${record.employeeName}`,
+      `Badge: ${record.badgeNumber}, Check-Out: ${record.checkOutTime || 'Active'}, OT Hours: ${record.overtimeHours}`,
+      `ClockingStation [Clock Out]`
+    );
   };
 
   // Handler: Delete Attendance
   const handleDeleteAttendance = (recordId: string) => {
     setAttendanceRecords((prev) => prev.filter((r) => r.id !== recordId));
+    logActivity(
+      'Clocking Action',
+      `Deleted Attendance Record ${recordId}`,
+      'Removed shift log from attendance register',
+      'AttendanceLogs [Delete Entry]'
+    );
   };
 
   // Handler: Add Overtime Request
   const handleAddRequest = (req: OvertimeRequest) => {
     setOvertimeRequests((prev) => [req, ...prev]);
+    logActivity(
+      'Overtime Approval',
+      `Submitted New Overtime Request for ${req.employeeName}`,
+      `Hours: ${req.estimatedHours} hrs (${req.overtimeType}), Reason: ${req.reasonCategory}`,
+      `OvertimeRequests [Submit Form]`
+    );
   };
 
   // Handler: Update Overtime Request
   const handleUpdateRequest = (req: OvertimeRequest) => {
     setOvertimeRequests((prev) => prev.map((r) => (r.id === req.id ? req : r)));
+    logActivity(
+      'Overtime Approval',
+      `${req.status === 'Approved' ? 'Approved' : req.status === 'Rejected' ? 'Rejected' : 'Updated'} Overtime Request ${req.id}`,
+      `Worker: ${req.employeeName} (${req.badgeNumber}), Status: ${req.status}, Approver: ${req.approvedByManager || 'Manager'}`,
+      `OvertimeRequests [${req.status} Action]`
+    );
   };
 
   // Handler: Batch Approve All Pending Requests
@@ -213,21 +374,30 @@ export default function App() {
           : r
       )
     );
+    logActivity(
+      'Overtime Approval',
+      'Batch Approved All Pending Overtime Requests',
+      'Plant Manager batch signed-off all pending overtime items',
+      'OvertimeRequests [Batch Approve All]'
+    );
   };
 
   // Handler: Add Employee
   const handleAddEmployee = (employee: Employee) => {
     setEmployees((prev) => [...prev, employee]);
+    logActivity('System & Export', `Added New Employee ${employee.fullName}`, `Badge: ${employee.badgeNumber}, Dept: ${employee.department}`, 'EmployeeRoster [Add Employee]');
   };
 
   // Handler: Update Employee
   const handleUpdateEmployee = (employee: Employee) => {
     setEmployees((prev) => prev.map((e) => (e.id === employee.id ? employee : e)));
+    logActivity('System & Export', `Updated Employee Record ${employee.fullName}`, `Badge: ${employee.badgeNumber}, Rate: ${employee.hourlyRateETB} ETB/hr`, 'EmployeeRoster [Edit Employee]');
   };
 
   // Handler: Delete Employee
   const handleDeleteEmployee = (employeeId: string) => {
     setEmployees((prev) => prev.filter((e) => e.id !== employeeId));
+    logActivity('System & Export', `Removed Employee ${employeeId}`, 'Deleted employee profile from roster', 'EmployeeRoster [Delete]');
   };
 
   // Handler: Update Employee Overtime Accumulator
@@ -241,9 +411,16 @@ export default function App() {
     );
   };
 
+
   // Handler: Save Policy Configuration
   const handleSavePolicy = (newPolicy: OvertimeRatePolicy) => {
     setPolicyState(newPolicy);
+    logActivity(
+      'Policy Update',
+      'Updated Overtime Rate & Limit Policy',
+      `Day: ${newPolicy.daytimeMultiplier}x, Night: ${newPolicy.nighttimeMultiplier}x, Rest Day: ${newPolicy.restDayMultiplier}x, Holiday: ${newPolicy.publicHolidayMultiplier}x, Limit: ${newPolicy.maxMonthlyHoursPerWorker} hrs`,
+      'PolicyConfig [Save Settings]'
+    );
   };
 
   // Handler: Reset to default demo data
@@ -253,18 +430,21 @@ export default function App() {
     setAttendanceRecords(loadAttendance());
     setOvertimeRequests(loadRequests());
     setPolicyState(loadPolicy());
+    logActivity('System & Export', 'Reset System Data to Default Demo State', 'Restored default dataset benchmarks', 'Sidebar [Reset Demo Data]');
   };
 
   const pendingRequestsCount = overtimeRequests.filter((r) => r.status === 'Pending').length;
   const exceededLimitCount = employees.filter((e) => e.currentMonthOTHours >= e.monthlyOvertimeLimitHours).length;
 
   const handleLogout = async () => {
+    logActivity('Authentication', 'User Logged Out', 'User ended portal session', 'TopHeader [Logout]');
     try {
       await signOut(auth);
     } catch (err) {
       console.error('Sign out error', err);
     }
   };
+
 
   if (authLoading) {
     return (
@@ -290,11 +470,11 @@ export default function App() {
       {/* Modern Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleSelectTab}
         pendingRequestsCount={pendingRequestsCount}
         exceededLimitCount={exceededLimitCount}
         onResetData={handleResetData}
-        onQuickClockIn={() => setActiveTab('clocking')}
+        onQuickClockIn={() => handleSelectTab('clocking')}
         onLogout={handleLogout}
       />
 
@@ -305,7 +485,7 @@ export default function App() {
           darkMode={darkMode}
           onToggleTheme={handleToggleTheme}
           onLogout={handleLogout}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleSelectTab}
         />
 
         {/* ADMIN WELCOME BANNER NOTICE */}
@@ -334,13 +514,13 @@ export default function App() {
               {/* Quick Action Shortcuts for Admin */}
               <div className="flex items-center space-x-2 pl-11 md:pl-0">
                 <button
-                  onClick={() => setActiveTab('requests')}
+                  onClick={() => handleSelectTab('requests')}
                   className="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-amber-400 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
                 >
                   {t('admin_quick_pending')} ({pendingRequestsCount})
                 </button>
                 <button
-                  onClick={() => setActiveTab('roster')}
+                  onClick={() => handleSelectTab('roster')}
                   className="px-3 py-1.5 bg-slate-900/80 hover:bg-slate-950 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
                 >
                   {t('admin_quick_roster')}
@@ -364,10 +544,11 @@ export default function App() {
             attendanceRecords={attendanceRecords}
             overtimeRequests={overtimeRequests}
             accessLogs={userAccessLogs}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleSelectTab}
             onOpenPayrollModal={() => setIsPayrollModalOpen(true)}
           />
         )}
+
 
         {activeTab === 'clocking' && (
           <ClockingStation

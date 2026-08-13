@@ -90,6 +90,15 @@ export interface DailySummary {
   totalOvertimePayETB: number;
 }
 
+export type ActivityCategory = 
+  | 'Authentication' 
+  | 'Navigation' 
+  | 'Clocking Action' 
+  | 'Overtime Approval' 
+  | 'Policy Update' 
+  | 'System & Export' 
+  | 'User Interaction';
+
 export interface UserAccessLog {
   id: string;
   email: string;
@@ -97,11 +106,16 @@ export interface UserAccessLog {
   role: 'System Administrator (Admin)' | 'Plant Operations Supervisor' | 'HR & Timekeeping Manager' | 'Shift Operator';
   accessTime: string; // ISO date-time
   displayTime: string; // Formatted EAT time
-  loginMethod: 'Firebase Auth' | 'Email & Password' | 'Quick Portal Access' | 'Session Sync';
+  loginMethod: 'Firebase Auth' | 'Email & Password' | 'Quick Portal Access' | 'Session Sync' | 'UI Action Listener';
   ipAddress: string;
   location: string;
   userAgent: string;
-  status: 'Active Session' | 'Logged In' | 'Logged Out';
+  status: 'Active Session' | 'Logged In' | 'Logged Out' | 'Activity Executed';
   badgeNumber?: string;
+  category: ActivityCategory;
+  actionTitle: string; // e.g., "Navigated to Overtime Requests", "Clicked Badge Clock-IN"
+  actionDetails?: string; // e.g., "Target: Button [Export Payroll CSV]"
+  targetElement?: string;
 }
+
 
