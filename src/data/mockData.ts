@@ -302,3 +302,77 @@ export const INITIAL_REQUESTS: OvertimeRequest[] = [
     rejectionReason: 'Worker has exceeded monthly 40-hour threshold (currently 42 hours). Work assigned to backup operator.',
   }
 ];
+
+export const INITIAL_ACCESS_LOGS = [
+  {
+    id: 'LOG-20260813-001',
+    email: 'assefa1476kefyalew@gmail.com',
+    fullName: 'Assefa Kefyalew (System Admin)',
+    role: 'System Administrator (Admin)' as const,
+    accessTime: '2026-08-13T06:47:49.000Z',
+    displayTime: 'Aug 13, 2026 • 06:47:49 EAT',
+    loginMethod: 'Firebase Auth' as const,
+    ipAddress: '197.156.121.84',
+    location: 'Addis Ababa, Ethiopia',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+    status: 'Active Session' as const,
+    badgeNumber: 'SYS-ADMIN-01'
+  },
+  {
+    id: 'LOG-20260813-002',
+    email: 'admin@akakimesob.com',
+    fullName: 'Worku Kassaye',
+    role: 'System Administrator (Admin)' as const,
+    accessTime: '2026-08-13T06:15:20.000Z',
+    displayTime: 'Aug 13, 2026 • 06:15:20 EAT',
+    loginMethod: 'Email & Password' as const,
+    ipAddress: '197.156.121.10',
+    location: 'Akaki Kality Sub-City, Addis Ababa',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    status: 'Active Session' as const,
+    badgeNumber: 'AKC-ADMIN-02'
+  },
+  {
+    id: 'LOG-20260813-003',
+    email: 'solomon.worku@akakimesob.com',
+    fullName: 'Eng. Solomon Worku',
+    role: 'Plant Operations Supervisor' as const,
+    accessTime: '2026-08-13T05:30:11.000Z',
+    displayTime: 'Aug 13, 2026 • 05:30:11 EAT',
+    loginMethod: 'Quick Portal Access' as const,
+    ipAddress: '197.156.122.45',
+    location: 'Akaki Kality Industrial Zone',
+    userAgent: 'Chrome 127.0.0.0 / Android 14',
+    status: 'Logged In' as const,
+    badgeNumber: 'AKC-SUP-101'
+  },
+  {
+    id: 'LOG-20260812-004',
+    email: 'martha.girma@akakimesob.com',
+    fullName: 'Martha Girma',
+    role: 'HR & Timekeeping Manager' as const,
+    accessTime: '2026-08-12T16:45:00.000Z',
+    displayTime: 'Aug 12, 2026 • 16:45:00 EAT',
+    loginMethod: 'Email & Password' as const,
+    ipAddress: '197.156.120.08',
+    location: 'Addis Ababa, Ethiopia',
+    userAgent: 'Safari 17.5 / macOS',
+    status: 'Logged Out' as const,
+    badgeNumber: 'AKC-HR-001'
+  },
+  {
+    id: 'LOG-20260812-005',
+    email: 'firew.plantmgr@akakimesob.com',
+    fullName: 'Firew Haile',
+    role: 'Plant Operations Supervisor' as const,
+    accessTime: '2026-08-12T14:10:33.000Z',
+    displayTime: 'Aug 12, 2026 • 14:10:33 EAT',
+    loginMethod: 'Email & Password' as const,
+    ipAddress: '197.156.121.99',
+    location: 'Akaki Kality Industrial Zone',
+    userAgent: 'Firefox 128.0 / Linux',
+    status: 'Logged Out' as const,
+    badgeNumber: 'AKC-MGR-002'
+  }
+];
+

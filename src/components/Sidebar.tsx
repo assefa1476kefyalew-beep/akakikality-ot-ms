@@ -81,6 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'roster', label: t('nav_roster'), icon: Users, alertBadge: exceededLimitCount },
     { id: 'scheduler', label: t('nav_scheduler'), icon: CalendarDays },
     { id: 'policy', label: t('nav_policy'), icon: Settings },
+    { id: 'access_logs', label: t('nav_access_logs'), icon: Shield },
   ];
 
   const filteredNavItems = navItems.filter((item) =>

@@ -23,6 +23,8 @@ import {
   saveRequests,
   loadPolicy,
   savePolicy,
+  loadAccessLogs,
+  saveAccessLogs,
   resetToDefaultData,
 } from './utils/localStorage';
 
@@ -36,7 +38,10 @@ import { AttendanceLogs } from './components/AttendanceLogs';
 import { EmployeeRoster } from './components/EmployeeRoster';
 import { ShiftScheduler } from './components/ShiftScheduler';
 import { PolicyConfig } from './components/PolicyConfig';
+import { UserAccessLogs } from './components/UserAccessLogs';
 import { PayrollExportModal } from './components/PayrollExportModal';
+import { UserAccessLog } from './types';
+
 
 export default function App() {
   const { t } = useLanguage();
@@ -81,6 +86,7 @@ export default function App() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(loadAttendance);
   const [overtimeRequests, setOvertimeRequests] = useState<OvertimeRequest[]>(loadRequests);
   const [policy, setPolicyState] = useState<OvertimeRatePolicy>(loadPolicy);
+  const [userAccessLogs, setUserAccessLogs] = useState<UserAccessLog[]>(loadAccessLogs);
 
   // Sync to LocalStorage on state changes
   useEffect(() => {
@@ -98,6 +104,74 @@ export default function App() {
   useEffect(() => {
     savePolicy(policy);
   }, [policy]);
+
+  useEffect(() => {
+    saveAccessLogs(userAccessLogs);
+  }, [userAccessLogs]);
+
+  // Record Session Access Log when user authenticates
+  useEffect(() => {
+    if (currentUser && currentUser.email) {
+      const userEmail = currentUser.email;
+      const isAdmin = currentUser.uid === '9Cjupb7U1mMU8104mBDLqUugMar1' || userEmail.includes('admin');
+      
+      setUserAccessLogs((prev) => {
+        // Check if user already has an active session
+        const existingActive = prev.find((l) => l.email === userEmail && l.status === 'Active Session');
+        if (existingActive) return prev; // Already logged as active
+
+        const now = new Date();
+        const displayTimeStr = now.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }) + ' • ' + now.toLocaleTimeString('en-US', {
+          timeZone: 'Africa/Addis_Ababa',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        }) + ' EAT';
+
+        const newLog: UserAccessLog = {
+          id: `LOG-${Date.now()}`,
+          email: userEmail,
+          fullName: currentUser.displayName || (isAdmin ? 'Assefa Kefyalew (System Admin)' : 'Plant Operations User'),
+          role: isAdmin ? 'System Administrator (Admin)' : 'Plant Operations Supervisor',
+          accessTime: now.toISOString(),
+          displayTime: displayTimeStr,
+          loginMethod: 'Firebase Auth',
+          ipAddress: '197.156.121.84',
+          location: 'Addis Ababa, Ethiopia',
+          userAgent: window.navigator.userAgent || 'Mozilla/5.0 (Client Terminal)',
+          status: 'Active Session',
+          badgeNumber: isAdmin ? 'SYS-ADMIN-01' : 'AKC-SUP-101',
+        };
+
+        return [newLog, ...prev];
+      });
+    }
+  }, [currentUser]);
+
+  // Handler: Access Log Management
+  const handleAddAccessLog = (newLog: Omit<UserAccessLog, 'id'>) => {
+    const logObj: UserAccessLog = {
+      ...newLog,
+      id: `LOG-${Date.now()}`,
+    };
+    setUserAccessLogs((prev) => [logObj, ...prev]);
+  };
+
+  const handleClearAccessLogs = () => {
+    setUserAccessLogs([]);
+  };
+
+  const handleTerminateSession = (logId: string) => {
+    setUserAccessLogs((prev) =>
+      prev.map((l) => (l.id === logId ? { ...l, status: 'Logged Out' } : l))
+    );
+  };
+
 
   // Handler: Add Attendance
   const handleAddAttendance = (record: AttendanceRecord) => {
@@ -289,6 +363,7 @@ export default function App() {
             employees={employees}
             attendanceRecords={attendanceRecords}
             overtimeRequests={overtimeRequests}
+            accessLogs={userAccessLogs}
             setActiveTab={setActiveTab}
             onOpenPayrollModal={() => setIsPayrollModalOpen(true)}
           />
@@ -340,6 +415,15 @@ export default function App() {
 
         {activeTab === 'policy' && (
           <PolicyConfig policy={policy} onSavePolicy={handleSavePolicy} />
+        )}
+
+        {activeTab === 'access_logs' && (
+          <UserAccessLogs
+            logs={userAccessLogs}
+            onAddLog={handleAddAccessLog}
+            onClearLogs={handleClearAccessLogs}
+            onTerminateSession={handleTerminateSession}
+          />
         )}
       </main>
 

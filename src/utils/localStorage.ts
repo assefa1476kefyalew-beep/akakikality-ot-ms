@@ -1,12 +1,14 @@
-import { Employee, AttendanceRecord, OvertimeRequest, OvertimeRatePolicy } from '../types';
-import { INITIAL_EMPLOYEES, INITIAL_ATTENDANCE, INITIAL_REQUESTS, INITIAL_POLICY } from '../data/mockData';
+import { Employee, AttendanceRecord, OvertimeRequest, OvertimeRatePolicy, UserAccessLog } from '../types';
+import { INITIAL_EMPLOYEES, INITIAL_ATTENDANCE, INITIAL_REQUESTS, INITIAL_POLICY, INITIAL_ACCESS_LOGS } from '../data/mockData';
 
 const KEYS = {
   EMPLOYEES: 'akaki_kality_employees_v1',
   ATTENDANCE: 'akaki_kality_attendance_v1',
   REQUESTS: 'akaki_kality_requests_v1',
   POLICY: 'akaki_kality_policy_v1',
+  ACCESS_LOGS: 'akaki_kality_access_logs_v1',
 };
+
 
 export const loadEmployees = (): Employee[] => {
   try {
@@ -80,9 +82,28 @@ export const savePolicy = (policy: OvertimeRatePolicy): void => {
   }
 };
 
+export const loadAccessLogs = (): UserAccessLog[] => {
+  try {
+    const data = localStorage.getItem(KEYS.ACCESS_LOGS);
+    return data ? JSON.parse(data) : INITIAL_ACCESS_LOGS;
+  } catch (err) {
+    console.error('Failed loading access logs', err);
+    return INITIAL_ACCESS_LOGS;
+  }
+};
+
+export const saveAccessLogs = (logs: UserAccessLog[]): void => {
+  try {
+    localStorage.setItem(KEYS.ACCESS_LOGS, JSON.stringify(logs));
+  } catch (err) {
+    console.error('Failed saving access logs', err);
+  }
+};
+
 export const resetToDefaultData = (): void => {
   localStorage.removeItem(KEYS.EMPLOYEES);
   localStorage.removeItem(KEYS.ATTENDANCE);
   localStorage.removeItem(KEYS.REQUESTS);
   localStorage.removeItem(KEYS.POLICY);
+  localStorage.removeItem(KEYS.ACCESS_LOGS);
 };

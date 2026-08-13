@@ -1,6 +1,6 @@
 import React from 'react';
-import { Employee, AttendanceRecord, OvertimeRequest } from '../types';
-import { Clock, Users, ShieldAlert, DollarSign, Calendar, TrendingUp, AlertOctagon, CheckCircle2, ArrowUpRight, Award, Building2 } from 'lucide-react';
+import { Employee, AttendanceRecord, OvertimeRequest, UserAccessLog } from '../types';
+import { Clock, Users, ShieldAlert, DollarSign, Calendar, TrendingUp, AlertOctagon, CheckCircle2, ArrowUpRight, Award, Building2, Shield, Eye, ShieldCheck, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -8,6 +8,7 @@ interface DashboardProps {
   employees: Employee[];
   attendanceRecords: AttendanceRecord[];
   overtimeRequests: OvertimeRequest[];
+  accessLogs?: UserAccessLog[];
   setActiveTab: (tab: string) => void;
   onOpenPayrollModal: () => void;
 }
@@ -16,6 +17,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   employees,
   attendanceRecords,
   overtimeRequests,
+  accessLogs = [],
   setActiveTab,
   onOpenPayrollModal,
 }) => {
@@ -391,6 +393,87 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Live Portal Login & Access Audit Feed */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/30">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Live Portal Login & Access History</h3>
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Real-time audit log of every admin, supervisor, and operator accessing the portal</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setActiveTab('access_logs')}
+            className="flex items-center space-x-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 px-3.5 py-1.5 rounded-xl transition-colors cursor-pointer border border-amber-200/60 dark:border-amber-800/50"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Full Security Audit ({accessLogs.length})</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {accessLogs.slice(0, 3).map((log) => {
+            const isActive = log.status === 'Active Session';
+            const isAdmin = log.role.includes('Admin');
+
+            return (
+              <div
+                key={log.id}
+                className="p-3.5 bg-slate-50 dark:bg-slate-950/70 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex items-start justify-between space-x-3 transition-all hover:border-amber-400/50"
+              >
+                <div className="space-y-1 overflow-hidden">
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-xs font-black text-slate-900 dark:text-white truncate">
+                      {log.fullName}
+                    </span>
+                    {isAdmin && (
+                      <span className="px-1.5 py-0.2 bg-amber-500 text-slate-950 text-[9px] font-black rounded uppercase">
+                        Admin
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                    {log.email}
+                  </p>
+                  <div className="flex items-center space-x-2 text-[10px] text-slate-500 dark:text-slate-400 pt-1">
+                    <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">{log.displayTime.split('•')[1]?.trim() || log.displayTime}</span>
+                    <span>•</span>
+                    <span className="truncate max-w-[100px]">{log.ipAddress}</span>
+                  </div>
+                </div>
+
+                <div className="flex-shrink-0 text-right space-y-1">
+                  {isActive ? (
+                    <span className="inline-flex items-center space-x-1 px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-300 font-black text-[9px] uppercase rounded-full border border-emerald-300 dark:border-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>Active Now</span>
+                    </span>
+                  ) : (
+                    <span className="inline-block px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[9px] rounded-full">
+                      {log.status}
+                    </span>
+                  )}
+                  <span className="block text-[9px] text-slate-400 font-medium">
+                    {log.loginMethod}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
+

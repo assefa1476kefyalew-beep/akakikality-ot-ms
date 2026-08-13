@@ -47,6 +47,28 @@ const translations: Record<Language, Record<string, string>> = {
     nav_roster: 'Employee Roster',
     nav_scheduler: 'Shift Roster',
     nav_policy: 'Rate Policies',
+    nav_access_logs: 'Portal Access Logs',
+
+    // Access Logs Component
+    access_logs_title: 'Portal User Login & Access Audit History',
+    access_logs_subtitle: 'Real-time security audit log tracking every user who signs in, accesses the management portal, and active user sessions.',
+    access_logs_badge: 'Admin Security & Access Control',
+    kpi_total_logins: 'Total Logins Tracked',
+    kpi_active_sessions: 'Active Sessions Now',
+    kpi_unique_users: 'Unique Authenticated Users',
+    kpi_today_logins: "Today's Portal Accesses",
+    simulate_login: 'Simulate Portal Access',
+    clear_logs: 'Clear Audit Trail',
+    export_logs: 'Export Access Logs',
+    col_user_email: 'User & Email',
+    col_access_time: 'Access Time (EAT)',
+    col_login_method: 'Login Method',
+    col_ip_location: 'IP & Location',
+    col_device_info: 'Device / Browser',
+    col_session_status: 'Session Status',
+    view_details: 'Inspect Payload',
+    terminate_session: 'Terminate Session',
+
 
     // Sidebar Actions
     badge_clock_terminal: 'Badge Clock Terminal',
@@ -284,6 +306,28 @@ const translations: Record<Language, Record<string, string>> = {
     nav_roster: 'የሰራተኞች ዝርዝር',
     nav_scheduler: 'የሺፍት መርሃግብር',
     nav_policy: 'የክፍያ ፖሊሲ',
+    nav_access_logs: 'የመግቢያ እና የፖርታል መዝገብ',
+
+    // Access Logs Component
+    access_logs_title: 'የተጠቃሚዎች የመግቢያ እና የፖርታል አጠቃቀም መዝገብ',
+    access_logs_subtitle: 'ወደ ፖርታሉ የሚገቡትን እና በስራ ላይ ያሉትን ሁሉንም ተጠቃሚዎች የደህንነት እና የመግቢያ ሰዓት መከታተያ ማዕከል፤',
+    access_logs_badge: 'የአስተዳዳሪ የደህንነት ቁጥጥር',
+    kpi_total_logins: 'ጠቅላላ የተመዘገቡ መግቢያዎች',
+    kpi_active_sessions: 'አሁን በስራ ላይ ያሉ መለያዎች',
+    kpi_unique_users: 'የተረጋገጡ ተጠቃሚዎች',
+    kpi_today_logins: 'የዛሬው የመግቢያ ብዛት',
+    simulate_login: 'የሙከራ መግቢያ አስገባ',
+    clear_logs: 'መዝገብ አጽዳ',
+    export_logs: 'የመግቢያ መረጃ አውርድ',
+    col_user_email: 'ተጠቃሚ እና ኢሜይል',
+    col_access_time: 'የመግቢያ ሰዓት',
+    col_login_method: 'የመግቢያ መንገድ',
+    col_ip_location: 'አይፒ እና ቦታ',
+    col_device_info: 'የመጠቀምያ መሳሪያ',
+    col_session_status: 'የመለያ ሁኔታ',
+    view_details: 'ዝርዝር መረጃ ተመልከት',
+    terminate_session: 'መለያውን አስወጣ',
+
 
     // Sidebar Actions
     badge_clock_terminal: 'የባጅ ሰዓት መመዝገቢያ',
@@ -521,6 +565,28 @@ const translations: Record<Language, Record<string, string>> = {
     nav_roster: "Tarree Hojjettootaa",
     nav_scheduler: "Sagantaa Dabaree",
     nav_policy: "Istaandardii Kaffaltii",
+    nav_access_logs: "Galmee Seensa Poortaalii",
+
+    // Access Logs Component
+    access_logs_title: "Galmee Seensa fi Fayyadama Seentota Poortaalii",
+    access_logs_subtitle: "To'annoo odeeffannoo seensa namoota poortaalicha fayyadamanii fi sa'aatii seensaa.",
+    access_logs_badge: "To'annoo Nageenyaa Bulchaa",
+    kpi_total_logins: "Ida'ama Seensa Galmeeffame",
+    kpi_active_sessions: "Seensa Hojii Irra Jiran",
+    kpi_unique_users: "Fayyadamtoota Mirkanaa'an",
+    kpi_today_logins: "Seensa Guyyaa Har'aa",
+    simulate_login: "Seensa Yaalii Galmeessi",
+    clear_logs: "Galmee Qulqulleessi",
+    export_logs: "Galmee Seensaa Buusi",
+    col_user_email: "Fayyadamaa fi Imeelii",
+    col_access_time: "Sa'aatii Seensaa",
+    col_login_method: "Mala Seensaa",
+    col_ip_location: "IP fi Bakka",
+    col_device_info: "Meeshaa Fayyadamaa",
+    col_session_status: "Haala Seensaa",
+    view_details: "Bal'ina Ilaali",
+    terminate_session: "Seensa Cufi",
+
 
     // Sidebar Actions
     badge_clock_terminal: "Galmee Sa'aatii Baajjii",

@@ -89,3 +89,19 @@ export interface DailySummary {
   totalOvertimeHours: number;
   totalOvertimePayETB: number;
 }
+
+export interface UserAccessLog {
+  id: string;
+  email: string;
+  fullName: string;
+  role: 'System Administrator (Admin)' | 'Plant Operations Supervisor' | 'HR & Timekeeping Manager' | 'Shift Operator';
+  accessTime: string; // ISO date-time
+  displayTime: string; // Formatted EAT time
+  loginMethod: 'Firebase Auth' | 'Email & Password' | 'Quick Portal Access' | 'Session Sync';
+  ipAddress: string;
+  location: string;
+  userAgent: string;
+  status: 'Active Session' | 'Logged In' | 'Logged Out';
+  badgeNumber?: string;
+}
+
