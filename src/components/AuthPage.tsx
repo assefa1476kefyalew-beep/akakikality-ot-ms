@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Mail, User, ShieldCheck, AlertCircle, ArrowRight, Factory, UserPlus, LogIn, Loader2, CheckCircle2, Send, Globe } from 'lucide-react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut } from 'firebase/auth';
+import { Lock, Mail, ShieldCheck, AlertCircle, ArrowRight, Factory, LogIn, Loader2, CheckCircle2, Send, Globe, ChevronDown, Moon, Sun } from 'lucide-react';
+import { signInWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useLanguage, languageNames, Language } from '../context/LanguageContext';
+import { AIChatBot } from './AIChatBot';
 
 interface AuthPageProps {
   onLoginSuccess?: () => void;
   unverifiedEmail?: string | null;
+  darkMode?: boolean;
+  onToggleTheme?: () => void;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEmail }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEmail, darkMode, onToggleTheme }) => {
   const { language, setLanguage, t } = useLanguage();
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -39,68 +40,38 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
     }
 
     try {
-      if (isSignUp) {
-        // Register user
-        const userCredential = await createUserWithEmailAndPassword(auth, targetEmail, password);
-        if (fullName.trim()) {
-          await updateProfile(userCredential.user, {
-            displayName: fullName.trim(),
-          });
-        }
-        // Send email verification
+      // Sign in user
+      const userCredential = await signInWithEmailAndPassword(auth, targetEmail, password);
+      // Check if email is verified
+      if (!userCredential.user.emailVerified) {
         try {
           await sendEmailVerification(userCredential.user);
         } catch (e) {
           console.error('Error sending email verification', e);
         }
-        // Do not sign them in automatically - sign out
         await signOut(auth);
         setLoading(false);
         setVerificationScreenEmail(targetEmail);
-      } else {
-        // Sign in user
-        const userCredential = await signInWithEmailAndPassword(auth, targetEmail, password);
-        // Check if email is verified
-        if (!userCredential.user.emailVerified) {
-          try {
-            await sendEmailVerification(userCredential.user);
-          } catch (e) {
-            console.error('Error sending email verification', e);
-          }
-          await signOut(auth);
-          setLoading(false);
-          setVerificationScreenEmail(targetEmail);
-          return;
-        }
+        return;
+      }
 
-        setLoading(false);
-        if (onLoginSuccess) {
-          onLoginSuccess();
-        }
+      setLoading(false);
+      if (onLoginSuccess) {
+        onLoginSuccess();
       }
     } catch (err: any) {
       setLoading(false);
       const code = err?.code || '';
 
-      if (isSignUp) {
-        if (code === 'auth/email-already-in-use') {
-          setError('User already exists. Please sign in');
-        } else if (code === 'auth/weak-password') {
-          setError('Password must be at least 6 characters long');
-        } else {
-          setError('Email or password is incorrect');
-        }
+      if (
+        code === 'auth/invalid-credential' ||
+        code === 'auth/user-not-found' ||
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-email'
+      ) {
+        setError('Email or password is incorrect');
       } else {
-        if (
-          code === 'auth/invalid-credential' ||
-          code === 'auth/user-not-found' ||
-          code === 'auth/wrong-password' ||
-          code === 'auth/invalid-email'
-        ) {
-          setError('Email or password is incorrect');
-        } else {
-          setError('Email or password is incorrect');
-        }
+        setError('Email or password is incorrect');
       }
     }
   };
@@ -112,7 +83,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
       console.error(e);
     }
     setVerificationScreenEmail(null);
-    setIsSignUp(false);
     setError(null);
   };
 
@@ -138,24 +108,46 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center items-center px-4 relative overflow-hidden selection:bg-amber-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-center items-center px-4 relative overflow-hidden selection:bg-amber-500 selection:text-slate-950 transition-colors duration-200">
       {/* Background Subtle Gradient Blobs */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-400/15 dark:bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-400/10 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Top Floating Language Switcher */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30">
+      {/* Top Floating Controls: Night Mode & Language Switcher */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center space-x-2">
+        {/* Night Mode / Day Mode Button */}
+        {onToggleTheme && (
+          <button
+            onClick={onToggleTheme}
+            className={`p-2.5 rounded-2xl transition-all cursor-pointer border shadow-md flex items-center justify-center ${
+              darkMode
+                ? 'bg-slate-900 hover:bg-slate-800 text-amber-300 border-slate-700 ring-1 ring-amber-400/20'
+                : 'bg-white hover:bg-slate-100 text-amber-900 border-slate-200'
+            }`}
+            title={darkMode ? t('day_mode') : t('night_mode')}
+            aria-label={darkMode ? t('day_mode') : t('night_mode')}
+          >
+            {darkMode ? (
+              <Sun className="w-4 h-4 text-amber-400 flex-shrink-0 animate-pulse" />
+            ) : (
+              <Moon className="w-4 h-4 text-amber-800 flex-shrink-0" />
+            )}
+          </button>
+        )}
+
+        {/* Language Switcher */}
         <div className="relative">
           <button
             onClick={() => setLangOpen(!langOpen)}
-            className="flex items-center space-x-2 bg-white/90 hover:bg-white border border-slate-200 shadow-md px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-800 transition-all cursor-pointer"
+            className="flex items-center space-x-2 bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-800 dark:text-slate-200 transition-all cursor-pointer"
           >
-            <Globe className="w-4 h-4 text-amber-600" />
-            <span>{languageNames[language].flag} {languageNames[language].name}</span>
+            <Globe className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>{languageNames[language].label}</span>
+            <ChevronDown className="w-3 h-3 text-slate-500" />
           </button>
 
           {langOpen && (
-            <div className="absolute right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 z-50 min-w-[190px] space-y-1">
+            <div className="absolute right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-2 z-50 min-w-[190px] space-y-1">
               {(['en', 'am', 'om'] as Language[]).map((langKey) => (
                 <button
                   key={langKey}
@@ -166,13 +158,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     language === langKey
                       ? 'bg-amber-500 text-slate-950 font-black'
-                      : 'text-slate-700 hover:bg-slate-100'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <span className="flex items-center space-x-2">
-                    <span>{languageNames[langKey].flag}</span>
-                    <span>{languageNames[langKey].label}</span>
-                  </span>
+                  <span>{languageNames[langKey].label}</span>
                   {language === langKey && <CheckCircle2 className="w-3.5 h-3.5 text-slate-950" />}
                 </button>
               ))}
@@ -202,7 +191,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
           </div>
         </div>
 
-        {/* Verification Screen OR Login/Register Card */}
+        {/* Verification Screen OR Login Card */}
         {verificationScreenEmail ? (
           <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-amber-300/70 dark:border-amber-700/50 rounded-3xl p-6 sm:p-8 shadow-xl shadow-amber-500/5 space-y-6 text-center">
             <div className="inline-flex p-4 bg-amber-100/80 dark:bg-amber-950/80 border border-amber-300/80 dark:border-amber-800/80 rounded-full text-amber-700 dark:text-amber-400 mb-2">
@@ -247,37 +236,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
           </div>
         ) : (
           <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/60 dark:shadow-none space-y-5">
-            {/* Mode Switcher Tabs */}
-            <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => { setIsSignUp(false); setError(null); }}
-                className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-                  !isSignUp ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold'
-                }`}
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>{t('sign_in')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setIsSignUp(true); setError(null); }}
-                className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-                  isSignUp ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold'
-                }`}
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                <span>{t('sign_up')}</span>
-              </button>
-            </div>
-
+            {/* Header */}
             <div className="border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center justify-between">
               <div>
                 <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                  {isSignUp ? t('sign_up_title') : t('sign_in_title')}
+                  {t('sign_in_title')}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isSignUp ? t('sign_up_subtitle') : t('sign_in_subtitle')}
+                  {t('sign_in_subtitle')}
                 </p>
               </div>
               <ShieldCheck className="w-5 h-5 text-amber-600" />
@@ -292,26 +258,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Full Name Input (Sign Up only) */}
-              {isSignUp && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
-                    {t('full_name')}
-                  </label>
-                  <div className="relative">
-                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Worku Kassaye"
-                      className="w-full pl-10 pr-4 py-2.5 text-xs font-medium bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-900 dark:text-white placeholder-slate-400 outline-none transition-all shadow-sm"
-                    />
-                  </div>
-                </div>
-              )}
-
               {/* Email Input */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
@@ -324,7 +270,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder={isSignUp ? "example@gmail.com" : "admin@akakimesob.com"}
+                    placeholder="admin@akakimesob.com"
                     className="w-full pl-10 pr-4 py-2.5 text-xs font-medium bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-slate-900 dark:text-white placeholder-slate-400 outline-none transition-all shadow-sm"
                   />
                 </div>
@@ -361,7 +307,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
                   </>
                 ) : (
                   <>
-                    <span>{isSignUp ? t('sign_up_button') : t('sign_in_button')}</span>
+                    <span>{t('sign_in_button')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -370,6 +316,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, unverifiedEm
           </div>
         )}
       </div>
+
+      {/* Floating AI Chatbot Assistant on Login Page */}
+      <AIChatBot darkMode={darkMode} />
     </div>
   );
 };

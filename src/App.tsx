@@ -43,6 +43,7 @@ import { ShiftScheduler } from './components/ShiftScheduler';
 import { PolicyConfig } from './components/PolicyConfig';
 import { UserAccessLogs } from './components/UserAccessLogs';
 import { PayrollExportModal } from './components/PayrollExportModal';
+import { AIChatBot } from './components/AIChatBot';
 
 
 export default function App() {
@@ -478,11 +479,11 @@ export default function App() {
   }
 
   if (!currentUser) {
-    return <AuthPage onLoginSuccess={() => {}} />;
+    return <AuthPage darkMode={darkMode} onToggleTheme={handleToggleTheme} onLoginSuccess={() => {}} />;
   }
 
   if (!currentUser.emailVerified) {
-    return <AuthPage unverifiedEmail={currentUser.email || ''} onLoginSuccess={() => {}} />;
+    return <AuthPage darkMode={darkMode} onToggleTheme={handleToggleTheme} unverifiedEmail={currentUser.email || ''} onLoginSuccess={() => {}} />;
   }
 
   return (
@@ -653,6 +654,9 @@ export default function App() {
         attendanceRecords={attendanceRecords}
         employees={employees}
       />
+
+      {/* AI Assistant Chatbot */}
+      <AIChatBot darkMode={darkMode} />
 
       {/* Footer */}
       <footer className="bg-slate-900 text-slate-400 py-4 px-4 text-center text-xs border-t border-slate-800/80">

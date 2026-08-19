@@ -466,7 +466,9 @@ export const UserAccessLogs: React.FC<UserAccessLogsProps> = ({
                                 {log.fullName}
                               </span>
                               {isAdminRole && (
-                                <Crown className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" title="Admin User" />
+                                <span title="Admin User">
+                                  <Crown className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                                </span>
                               )}
                             </div>
                             <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono block">
