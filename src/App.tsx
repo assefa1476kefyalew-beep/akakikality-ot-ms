@@ -471,9 +471,8 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-amber-400 font-bold text-xs font-mono">
-        <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mb-3" />
-        <span>Authenticating AKAKKI KALITY MESOB CENTER...</span>
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center">
+        <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
